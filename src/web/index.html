@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NN Visualiser</title>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <header class="topbar panel">
+      <strong>NN Visualiser</strong>
+      <label>Model <select id="modelSelect"></select></label>
+      <button id="settingsBtn" type="button">Settings</button>
+    </header>
+
+    <section id="imagePanel" class="panel left">
+      <h2 id="drawTitle">Draw</h2>
+      <div id="sketchpad"></div>
+      <div class="row">
+        <button id="clearBtn" type="button">Clear</button>
+        <span class="muted">Left: draw · Right: erase</span>
+      </div>
+      <div id="samples"></div>
+    </section>
+
+    <section id="textPanel" class="panel left hidden">
+      <h2 id="textTitle">Text</h2>
+      <textarea id="prompt" class="prompt" rows="4" spellcheck="false" aria-label="Text the model continues"></textarea>
+      <div id="ignored" class="muted"></div>
+      <div class="player-bar">
+        <button id="backBtn" type="button" title="Previous step">⏮</button>
+        <button id="playBtn" type="button" class="primary">▶ Play</button>
+        <button id="stepBtn" type="button" title="Next step">Step ⏭</button>
+        <button id="nextLetterBtn" type="button" title="Finish this letter">Letter ⏭⏭</button>
+      </div>
+      <div id="stepPills" class="step-pills"></div>
+      <label class="setting">
+        <span class="setting-head"><span>Speed</span><span id="speedValue" class="muted"></span></span>
+        <input id="speed" type="range" min="0" max="1" step="0.01" value="0.25" />
+      </label>
+      <label class="setting">
+        <span class="setting-head"><span>Temperature</span><span id="temperatureValue" class="muted">0.80</span></span>
+        <input id="temperature" type="range" min="0.1" max="1.5" step="0.05" value="0.8" />
+        <span class="muted">Low: safe and repetitive. High: creative, then nonsense.</span>
+      </label>
+      <label class="setting">
+        <span class="setting-head"><span>Attention heads</span></span>
+        <select id="headSelect"></select>
+      </label>
+      <div class="row">
+        <label class="muted"><input id="followCamera" type="checkbox" checked /> Camera follows the steps</label>
+        <button id="textClearBtn" type="button">Clear text</button>
+      </div>
+    </section>
+
+    <section class="panel right">
+      <h2>Prediction</h2>
+      <div id="chart"></div>
+    </section>
+
+    <section id="settingsPanel" class="panel settings hidden"></section>
+    <section id="neuronPanel" class="panel neuron hidden"></section>
+    <section id="caption" class="panel caption hidden"></section>
+
+    <footer class="panel timeline">
+      <input id="timelineSlider" type="range" min="0" max="0" value="0" aria-label="Training snapshot" />
+      <div id="timelineLabel"></div>
+      <pre id="timelineSample" class="timeline-sample hidden"></pre>
+      <div id="timelineError" class="error"></div>
+    </footer>
+
+    <div id="banner" class="banner hidden"></div>
+    <div id="fatal" class="fatal hidden"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Networks for Kids - how it works</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --fg: #1c2433;
+    --muted: #5d6779;
+    --panel: #ffffff;
+    --panel-2: #eef1f7;
+    --line: #c9d0dc;
+    --warm: #e8711c;
+    --warm-soft: #fde3cf;
+    --cool: #2f6fdb;
+    --cool-soft: #d9e6fb;
+    --ok: #2f9e6a;
+    --code-bg: #eef1f7;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0f17;
+      --fg: #e5e9f2;
+      --muted: #8b95a7;
+      --panel: #121926;
+      --panel-2: #1a2232;
+      --line: #2d3850;
+      --warm: #ff9f43;
+      --warm-soft: #3a2614;
+      --cool: #5b9dff;
+      --cool-soft: #15274a;
+      --ok: #4cc38a;
+      --code-bg: #1a2232;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f17; --fg: #e5e9f2; --muted: #8b95a7; --panel: #121926; --panel-2: #1a2232;
+    --line: #2d3850; --warm: #ff9f43; --warm-soft: #3a2614; --cool: #5b9dff; --cool-soft: #15274a;
+    --ok: #4cc38a; --code-bg: #1a2232; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 40px 16px 80px; }
+  header h1 { font-size: 2rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { color: var(--muted); margin: 0; }
+  nav { margin: 24px 0 8px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.9rem; }
+  nav a { color: var(--cool); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  section { margin-top: 52px; }
+  h2 { font-size: 1.35rem; margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; }
+  h2 .num { color: var(--warm); font-variant-numeric: tabular-nums; font-size: 1rem; }
+  h3 { font-size: 1.05rem; margin: 26px 0 6px; }
+  .muted { color: var(--muted); }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    border-radius: 5px;
+  }
+  code { padding: 1px 5px; }
+  pre { padding: 12px 14px; overflow-x: auto; line-height: 1.45; }
+  figure { margin: 18px 0; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 10px; }
+  .callout { border-left: 3px solid var(--warm); background: var(--panel); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.cool { border-left-color: var(--cool); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } .grid4 { grid-template-columns: 1fr 1fr; } }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .table-wrap { overflow-x: auto; }
+
+  /* SVG vocabulary */
+  .box { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; }
+  .box-warm { fill: var(--warm-soft); stroke: var(--warm); stroke-width: 1.5; }
+  .box-cool { fill: var(--cool-soft); stroke: var(--cool); stroke-width: 1.5; }
+  .t { fill: var(--fg); font: 600 14px system-ui, sans-serif; }
+  .ts { fill: var(--muted); font: 12px system-ui, sans-serif; }
+  .tm { fill: var(--fg); font: 13px ui-monospace, Menlo, monospace; }
+  .tmw { fill: var(--warm); font: 600 13px ui-monospace, Menlo, monospace; }
+  .tmc { fill: var(--cool); font: 600 13px ui-monospace, Menlo, monospace; }
+  .arrow { stroke: var(--muted); stroke-width: 1.6; fill: none; marker-end: url(#arr); }
+  .arrow-warm { stroke: var(--warm); stroke-width: 2; fill: none; marker-end: url(#arrw); }
+  .edge { stroke: var(--line); stroke-width: 1; }
+  .edge-warm { stroke: var(--warm); }
+  .edge-cool { stroke: var(--cool); }
+  .node { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
+  .node-hot { fill: var(--warm); stroke: var(--warm); }
+  .node-mid { fill: var(--cool); stroke: var(--cool); }
+  .px-on { fill: var(--fg); }
+  .px-off { fill: var(--panel-2); }
+  .curve { stroke: var(--warm); stroke-width: 2.5; fill: none; }
+  .curve-cool { stroke: var(--cool); stroke-width: 2.5; fill: none; }
+  .axis { stroke: var(--muted); stroke-width: 1.2; }
+  .grid-line { stroke: var(--line); stroke-width: 1; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+    </marker>
+    <marker id="arrw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--warm)"/>
+    </marker>
+  </defs>
+</svg>
+
+<main>
+  <header>
+    <h1>Neural Networks for Kids - how it works</h1>
+    <p>Small neural networks, written from scratch in TypeScript, trained in Node and visualised live in the browser. This page also explains how the same ideas scale up to the large language models (LLMs) behind modern AI assistants.</p>
+  </header>
+
+  <nav>
+    <a href="#overview">1 · Big picture</a>
+    <a href="#network">2 · The MLP</a>
+    <a href="#neuron">3 · One neuron</a>
+    <a href="#training">4 · Training loop</a>
+    <a href="#backprop">5 · Backward pass, step by step</a>
+    <a href="#adam">6 · Adam</a>
+    <a href="#cnn">7 · Convolutional networks</a>
+    <a href="#data">8 · Data</a>
+    <a href="#snapshots">9 · Snapshots</a>
+    <a href="#browser">10 · In the browser</a>
+    <a href="#transformer">11 · A tiny transformer</a>
+    <a href="#llm">12 · From here to LLMs</a>
+    <a href="#files">13 · Code map</a>
+  </nav>
+
+  <!-- 1 -->
+  <section id="overview">
+    <h2><span class="num">1</span> The big picture</h2>
+    <p>There are two programs that share one piece of code. The <b>trainer</b> runs in Node: it downloads handwriting images, teaches a network, and saves its weights. The <b>viewer</b> runs in the browser: it loads those weights and runs the same network on whatever you draw. The network itself lives in <code>src/nn/</code>, plain TypeScript with no ML libraries. Both sides import it, so training and drawing use exactly the same maths.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 190" role="img" aria-label="Pipeline: dataset, trainer, model files, browser viewer">
+        <rect class="box" x="10" y="45" width="150" height="80" rx="10"/>
+        <text class="t" x="85" y="78" text-anchor="middle">Datasets</text>
+        <text class="ts" x="85" y="98" text-anchor="middle">MNIST · EMNIST</text>
+        <text class="ts" x="85" y="114" text-anchor="middle">cached in data/</text>
+        <line class="arrow" x1="165" y1="85" x2="215" y2="85"/>
+        <rect class="box-warm" x="220" y="45" width="170" height="80" rx="10"/>
+        <text class="t" x="305" y="78" text-anchor="middle">Trainer (Node)</text>
+        <text class="ts" x="305" y="98" text-anchor="middle">npm run train</text>
+        <text class="ts" x="305" y="114" text-anchor="middle">--arch mlp | cnn</text>
+        <line class="arrow" x1="395" y1="85" x2="445" y2="85"/>
+        <rect class="box" x="450" y="45" width="150" height="80" rx="10"/>
+        <text class="t" x="525" y="78" text-anchor="middle">Model files</text>
+        <text class="ts" x="525" y="98" text-anchor="middle">public/models/</text>
+        <text class="ts" x="525" y="114" text-anchor="middle">JSON + float16</text>
+        <line class="arrow" x1="605" y1="85" x2="655" y2="85"/>
+        <rect class="box-cool" x="660" y="45" width="150" height="80" rx="10"/>
+        <text class="t" x="735" y="78" text-anchor="middle">Viewer (browser)</text>
+        <text class="ts" x="735" y="98" text-anchor="middle">npm run dev</text>
+        <text class="ts" x="735" y="114" text-anchor="middle">Vite + Three.js</text>
+        <rect class="box" x="300" y="150" width="430" height="32" rx="8" stroke-dasharray="5 4"/>
+        <text class="tm" x="515" y="171" text-anchor="middle">src/nn — shared network code (no DOM, no Node APIs)</text>
+        <line class="arrow" x1="330" y1="148" x2="315" y2="130"/>
+        <line class="arrow" x1="700" y1="148" x2="725" y2="130"/>
+      </svg>
+      <figcaption>The trainer writes files and the viewer reads them. Nothing runs on a server: Vite only serves static files.</figcaption>
+    </figure>
+
+    <p>Two kinds of network can be trained and compared side by side in the viewer's model picker:</p>
+    <div class="grid4">
+      <div class="stat"><b>97.6 %</b><span>digits · MLP<br>5 epochs, ~109 k weights</span></div>
+      <div class="stat"><b>98.1 %</b><span>digits · CNN<br>3 epochs, ~28 k weights</span></div>
+      <div class="stat"><b>87.9 %</b><span>letters · MLP<br>3 epochs</span></div>
+      <div class="stat"><b>91.3 %</b><span>letters · CNN<br>3 epochs</span></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="network">
+    <h2><span class="num">2</span> The MLP: a multi-layer perceptron</h2>
+    <p>The picture becomes a list of 784 numbers (28 × 28 pixels). These flow through two <b>hidden layers</b> of 128 and 64 neurons and end in one output neuron per class: 10 for digits, 26 for letters. Every neuron is connected to every neuron in the previous layer, which is why it's called a <i>dense</i> or <i>fully connected</i> network. "MLP" stands for multi-layer perceptron. A <i>perceptron</i> is the original 1958 artificial neuron.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 330" role="img" aria-label="Network layers 784, 128, 64, 10">
+        <g transform="translate(30,70)">
+          <rect class="box" x="0" y="0" width="140" height="140" rx="4"/>
+          <rect class="px-on" x="30" y="25" width="85" height="14"/>
+          <rect class="px-on" x="100" y="39" width="15" height="20"/>
+          <rect class="px-on" x="88" y="59" width="15" height="22"/>
+          <rect class="px-on" x="76" y="81" width="15" height="22"/>
+          <rect class="px-on" x="64" y="103" width="15" height="20"/>
+          <text class="t" x="70" y="170" text-anchor="middle">Input</text>
+          <text class="ts" x="70" y="188" text-anchor="middle">784 = 28 × 28 pixels</text>
+        </g>
+        <g class="edge" opacity="0.7">
+          <line x1="172" y1="100" x2="330" y2="60"/><line x1="172" y1="140" x2="330" y2="110"/>
+          <line x1="172" y1="180" x2="330" y2="160"/><line x1="172" y1="120" x2="330" y2="210"/>
+          <line x1="172" y1="160" x2="330" y2="260"/><line x1="172" y1="100" x2="330" y2="160"/>
+          <line x1="172" y1="200" x2="330" y2="110"/><line x1="172" y1="140" x2="330" y2="260"/>
+        </g>
+        <g>
+          <circle class="node" cx="340" cy="60" r="10"/><circle class="node-hot" cx="340" cy="110" r="10"/>
+          <circle class="node" cx="340" cy="160" r="10"/><circle class="node-mid" cx="340" cy="210" r="10"/>
+          <circle class="node" cx="340" cy="260" r="10"/>
+          <text class="ts" x="340" y="290" text-anchor="middle">⋮</text>
+          <text class="t" x="340" y="315" text-anchor="middle">Hidden 1 · 128</text>
+        </g>
+        <g class="edge" opacity="0.7">
+          <line x1="350" y1="60" x2="510" y2="85"/><line x1="350" y1="110" x2="510" y2="85"/>
+          <line x1="350" y1="110" x2="510" y2="145"/><line x1="350" y1="160" x2="510" y2="205"/>
+          <line x1="350" y1="210" x2="510" y2="145"/><line x1="350" y1="260" x2="510" y2="205"/>
+          <line x1="350" y1="210" x2="510" y2="235"/><line x1="350" y1="60" x2="510" y2="235"/>
+        </g>
+        <g>
+          <circle class="node" cx="520" cy="85" r="10"/><circle class="node-hot" cx="520" cy="145" r="10"/>
+          <circle class="node" cx="520" cy="205" r="10"/><circle class="node-mid" cx="520" cy="235" r="10"/>
+          <text class="ts" x="520" y="265" text-anchor="middle">⋮</text>
+          <text class="t" x="520" y="315" text-anchor="middle">Hidden 2 · 64</text>
+        </g>
+        <g class="edge" opacity="0.7">
+          <line x1="530" y1="85" x2="690" y2="40"/><line x1="530" y1="145" x2="690" y2="185"/>
+          <line x1="530" y1="205" x2="690" y2="100"/><line x1="530" y1="235" x2="690" y2="265"/>
+          <line x1="530" y1="145" x2="690" y2="130"/>
+        </g>
+        <g>
+          <circle class="node" cx="700" cy="40" r="9"/><text class="ts" x="718" y="44">0</text>
+          <circle class="node" cx="700" cy="70" r="9"/><text class="ts" x="718" y="74">1</text>
+          <circle class="node" cx="700" cy="100" r="9"/><text class="ts" x="718" y="104">2</text>
+          <circle class="node" cx="700" cy="130" r="9"/><text class="ts" x="718" y="134">…</text>
+          <circle class="node-hot" cx="700" cy="185" r="11"/><text class="t" x="718" y="190">7  → 99 %</text>
+          <circle class="node" cx="700" cy="235" r="9"/><text class="ts" x="718" y="239">8</text>
+          <circle class="node" cx="700" cy="265" r="9"/><text class="ts" x="718" y="269">9</text>
+          <text class="t" x="700" y="315" text-anchor="middle">Output · 10</text>
+        </g>
+      </svg>
+      <figcaption>784 → 128 → 64 → 10: 109 386 adjustable numbers (weights and biases), and they are everything the network "knows". Change the hidden sizes with <code>--hidden 256,128</code>.</figcaption>
+    </figure>
+
+    <p>The hidden layers use <b>ReLU</b> (negative values become 0). The output layer uses <b>softmax</b>, which turns the raw scores into probabilities that add up to 100 %. Those are the bars on the right of the viewer.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 200" role="img" aria-label="ReLU curve and softmax bars">
+        <g transform="translate(40,20)">
+          <line class="axis" x1="0" y1="130" x2="300" y2="130"/>
+          <line class="axis" x1="150" y1="0" x2="150" y2="160"/>
+          <polyline class="curve" points="0,130 150,130 290,10"/>
+          <text class="t" x="0" y="175">ReLU(z) = max(0, z)</text>
+          <text class="ts" x="20" y="120">negative → 0</text>
+          <text class="ts" x="225" y="112">positive → passes</text>
+        </g>
+        <g transform="translate(450,20)">
+          <text class="ts" x="0" y="12">scores (logits)</text>
+          <text class="tm" x="0" y="34">2.1  −0.3  0.5  6.8</text>
+          <line class="arrow" x1="80" y1="48" x2="80" y2="72"/>
+          <text class="ts" x="95" y="65">softmax: eᶻ / Σ eᶻ</text>
+          <rect class="box" x="0" y="80" width="40" height="70"/>
+          <rect class="box-cool" x="0" y="146" width="40" height="4"/>
+          <rect class="box" x="60" y="80" width="40" height="70"/>
+          <rect class="box" x="120" y="80" width="40" height="70"/>
+          <rect class="box-cool" x="120" y="148" width="40" height="2"/>
+          <rect class="box" x="180" y="80" width="40" height="70"/>
+          <rect class="box-warm" x="180" y="84" width="40" height="66"/>
+          <text class="ts" x="20" y="168" text-anchor="middle">0.9%</text>
+          <text class="ts" x="80" y="168" text-anchor="middle">0.1%</text>
+          <text class="ts" x="140" y="168" text-anchor="middle">0.2%</text>
+          <text class="ts" x="200" y="168" text-anchor="middle">98.8%</text>
+          <text class="t" x="0" y="190">probabilities that sum to 1</text>
+        </g>
+      </svg>
+    </figure>
+  </section>
+
+  <!-- 3 -->
+  <section id="neuron">
+    <h2><span class="num">3</span> What one neuron does</h2>
+    <p>Each neuron does the same small calculation: multiply each input by its weight, add them all up, add a bias, then apply ReLU. That is exactly what the viewer's <b>neuron inspector</b> shows when you click a sphere.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 230" role="img" aria-label="Single neuron: weighted sum plus bias then ReLU">
+        <circle class="node-hot" cx="60" cy="50" r="14"/><text class="tm" x="30" y="30">x₁=0.9</text>
+        <circle class="node" cx="60" cy="115" r="14"/><text class="tm" x="30" y="95">x₂=0.0</text>
+        <circle class="node-hot" cx="60" cy="180" r="14"/><text class="tm" x="30" y="160">x₃=0.6</text>
+        <line class="edge edge-warm" x1="75" y1="52" x2="335" y2="108" stroke-width="3"/>
+        <line class="edge" x1="75" y1="115" x2="335" y2="115" stroke-width="1.5"/>
+        <line class="edge edge-cool" x1="75" y1="178" x2="335" y2="122" stroke-width="2"/>
+        <text class="tm" x="170" y="68">w₁ = +0.8</text>
+        <text class="tm" x="170" y="108">w₂ = +0.5</text>
+        <text class="tm" x="170" y="170">w₃ = −0.4</text>
+        <circle class="box-warm" cx="370" cy="115" r="36"/>
+        <text class="t" x="370" y="112" text-anchor="middle">Σ + b</text>
+        <text class="ts" x="370" y="130" text-anchor="middle">b = 0.1</text>
+        <line class="arrow" x1="408" y1="115" x2="470" y2="115"/>
+        <rect class="box" x="475" y="85" width="90" height="60" rx="8"/>
+        <polyline class="curve" points="490,130 520,130 552,96"/>
+        <text class="ts" x="520" y="160" text-anchor="middle">ReLU</text>
+        <line class="arrow" x1="570" y1="115" x2="625" y2="115"/>
+        <text class="t" x="632" y="120">a = 0.58</text>
+        <text class="tm" x="20" y="220">z = 0.9·0.8 + 0.0·0.5 + 0.6·(−0.4) + 0.1 = 0.58   →   a = ReLU(0.58) = 0.58</text>
+      </svg>
+      <figcaption>Each line carries <b>input × weight</b>. Warm lines push the neuron up and cool lines push it down. An input of 0 carries nothing, whatever its weight.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 -->
+  <section id="training">
+    <h2><span class="num">4</span> The training loop</h2>
+    <p>At first the weights are random (He initialisation with a seeded random generator), so predictions are guesses at about 10 %. Training repeats one loop thousands of times: show the network a small batch of labelled images, measure how wrong it is, work out how each weight contributed to the error, and nudge every weight slightly in the direction that would have made it less wrong.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 300" role="img" aria-label="Training loop: batch, forward, loss, backward, Adam update">
+        <rect class="box" x="40" y="40" width="170" height="64" rx="10"/>
+        <text class="t" x="125" y="68" text-anchor="middle">1 · Mini-batch</text>
+        <text class="ts" x="125" y="88" text-anchor="middle">64 shuffled images + labels</text>
+        <rect class="box-cool" x="325" y="40" width="170" height="64" rx="10"/>
+        <text class="t" x="410" y="68" text-anchor="middle">2 · Forward pass</text>
+        <text class="ts" x="410" y="88" text-anchor="middle">predict probabilities</text>
+        <rect class="box" x="595" y="40" width="200" height="64" rx="10"/>
+        <text class="t" x="695" y="68" text-anchor="middle">3 · Loss</text>
+        <text class="ts" x="695" y="88" text-anchor="middle">cross-entropy: −log p(correct)</text>
+        <rect class="box-warm" x="610" y="196" width="170" height="64" rx="10"/>
+        <text class="t" x="695" y="224" text-anchor="middle">4 · Backward pass</text>
+        <text class="ts" x="695" y="244" text-anchor="middle">gradient for every weight</text>
+        <rect class="box" x="325" y="196" width="170" height="64" rx="10"/>
+        <text class="t" x="410" y="224" text-anchor="middle">5 · Adam update</text>
+        <text class="ts" x="410" y="244" text-anchor="middle">nudge every weight</text>
+        <line class="arrow" x1="212" y1="72" x2="320" y2="72"/>
+        <line class="arrow" x1="497" y1="72" x2="590" y2="72"/>
+        <line class="arrow" x1="695" y1="106" x2="695" y2="191"/>
+        <line class="arrow" x1="607" y1="228" x2="500" y2="228"/>
+        <path class="arrow" d="M322,228 L125,228 L125,110"/>
+        <text class="ts" x="140" y="160">repeat · ~940 batches = 1 epoch</text>
+      </svg>
+      <figcaption>One <b>epoch</b> is one pass over all 60 000 training images. The next two sections zoom into steps 4 and 5.</figcaption>
+    </figure>
+
+    <p><b>Why "loss" and not just accuracy?</b> Accuracy only says right or wrong. Cross-entropy, −log of the probability given to the correct answer, also says <i>how</i> wrong: 90 % sure and right gives a loss of 0.11, 40 % sure and right gives 0.92, and 1 % sure gives 4.6. It changes smoothly as the weights change, which is what makes it possible to compute in which direction to move each weight.</p>
+  </section>
+
+  <!-- 5 -->
+  <section id="backprop">
+    <h2><span class="num">5</span> The backward pass, step by step</h2>
+    <p><b>Backpropagation answers one question for every weight: "if I nudged this weight up a little, would the loss go up or down, and by how much?"</b> That number is the weight's <i>gradient</i>. The update then moves each weight a small step the opposite way.</p>
+    <p>It is called <i>backward</i> because the cheapest way to get the answer for all 109 000 weights is to start at the output, where the mistake is visible, and pass "blame" back layer by layer through the same connections the forward pass used. Here it is on a network small enough to follow by hand: 2 inputs, 1 hidden neuron and 2 classes, where the correct answer is <b>A</b>.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 400" role="img" aria-label="Worked backpropagation example: forward values on top, errors flowing back below">
+        <text class="t" x="20" y="24">Forward pass →</text>
+        <!-- inputs -->
+        <circle class="node" cx="70" cy="90" r="18"/><text class="tm" x="70" y="95" text-anchor="middle">1.0</text>
+        <text class="ts" x="70" y="62" text-anchor="middle">x₁</text>
+        <circle class="node" cx="70" cy="190" r="18"/><text class="tm" x="70" y="195" text-anchor="middle">0.5</text>
+        <text class="ts" x="70" y="162" text-anchor="middle">x₂</text>
+        <!-- hidden -->
+        <line class="edge" x1="88" y1="94" x2="302" y2="136"/>
+        <line class="edge" x1="88" y1="186" x2="302" y2="144"/>
+        <text class="tm" x="150" y="104">w₁ = 0.4</text>
+        <text class="tm" x="150" y="190">w₂ = −0.2</text>
+        <circle class="box-cool" cx="325" cy="140" r="24"/>
+        <text class="tm" x="325" y="145" text-anchor="middle">0.3</text>
+        <text class="ts" x="325" y="104" text-anchor="middle">hidden h (ReLU)</text>
+        <!-- outputs -->
+        <line class="edge" x1="349" y1="134" x2="560" y2="92"/>
+        <line class="edge" x1="349" y1="146" x2="560" y2="188"/>
+        <text class="tm" x="420" y="100">v_A = 1.0</text>
+        <text class="tm" x="420" y="190">v_B = 2.0</text>
+        <circle class="node" cx="585" cy="90" r="24"/><text class="tm" x="585" y="95" text-anchor="middle">0.3</text>
+        <circle class="node" cx="585" cy="190" r="24"/><text class="tm" x="585" y="195" text-anchor="middle">0.6</text>
+        <text class="t" x="622" y="86">A: p = 0.426</text><text class="ts" x="622" y="104">correct class</text>
+        <text class="t" x="622" y="186">B: p = 0.574</text><text class="ts" x="622" y="204">wrong, but more likely</text>
+
+        <line class="grid-line" x1="20" y1="232" x2="800" y2="232" stroke-dasharray="4 4"/>
+        <text class="t" x="20" y="258">← Backward pass (errors)</text>
+        <text class="tmw" x="600" y="282">① A: 0.426 − 1 = −0.574</text>
+        <text class="tmw" x="600" y="302">① B: 0.574 − 0 = +0.574</text>
+        <line class="arrow-warm" x1="592" y1="292" x2="540" y2="292"/>
+        <text class="tmw" x="130" y="286">③ error(h) = 1.0·(−0.574) + 2.0·(+0.574)</text>
+        <text class="tmw" x="130" y="306">           = +0.574  → "h should shrink"</text>
+        <line class="arrow-warm" x1="122" y1="296" x2="80" y2="296"/>
+        <text class="tm" x="20" y="350">② grad v_A = 0.3·(−0.574) = −0.172      grad v_B = 0.3·0.574 = +0.172</text>
+        <text class="tm" x="20" y="376">⑤ grad w₁ = 1.0·0.574 = +0.574          grad w₂ = 0.5·0.574 = +0.287</text>
+      </svg>
+      <figcaption>Top: values flowing forward. Bottom: errors flowing backward along the same connections.</figcaption>
+    </figure>
+
+    <h3>The five steps</h3>
+    <ol>
+      <li><b>Error at the outputs.</b> With softmax plus cross-entropy it is simply <i>predicted probability − target</i>, where the target is 1 for the right class and 0 for the others. A: −0.574 means "push this score up". B: +0.574 means "push this one down".</li>
+      <li><b>Gradients of the output weights.</b> A weight's effect on its target is proportional to the input it carries, so <i>gradient = input × error at the target</i>. For v_A: 0.3 × (−0.574) = −0.172, so v_A will grow.</li>
+      <li><b>Blame for the hidden neuron.</b> h fed both outputs, so its error is the sum of the errors it fed into, each weighted by the connection it used. Here that's +0.574: h feeds B twice as strongly as A, so a smaller h hurts the wrong answer more than the right one.</li>
+      <li><b>Through ReLU.</b> The error passes back only if the neuron was active (z &gt; 0). A neuron that output 0 gets no blame, because nudging its weights a little wouldn't change anything.</li>
+      <li><b>Gradients of the hidden weights.</b> Same rule as step 2: w₁ gets 1.0 × 0.574, w₂ gets 0.5 × 0.574, and the bias gets 0.574 (a bias acts like a weight whose input is always 1).</li>
+    </ol>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th>After one step (learning rate 0.1)</th><th class="num">before</th><th class="num">after</th></tr>
+        <tr><td>v_A / v_B</td><td class="num">1.0 / 2.0</td><td class="num">1.017 / 1.983</td></tr>
+        <tr><td>w₁ / w₂ / bias</td><td class="num">0.4 / −0.2 / 0</td><td class="num">0.343 / −0.229 / −0.057</td></tr>
+        <tr><td><b>p(A), the correct class</b></td><td class="num">0.426</td><td class="num"><b>0.459</b></td></tr>
+        <tr><td><b>loss</b></td><td class="num">0.854</td><td class="num"><b>0.779</b></td></tr>
+      </table>
+    </div>
+
+    <div class="callout">
+      <b>The whole algorithm in two rules</b><br>
+      1. <b>Weight gradient = its input × the error at its target.</b> Weights that carried a large input get adjusted most; weights whose input was 0 aren't adjusted at all.<br>
+      2. <b>Error of a neuron = Σ (outgoing weight × error of the neuron it feeds), × 0 if ReLU was off.</b><br>
+      Apply rule 2 layer by layer from the output back to the input, and rule 1 at every layer on the way. Mathematically this is the <i>chain rule</i> from calculus. One backward pass costs about as much as two forward passes.
+    </div>
+
+    <p>In the code (<code>Network.backward</code> in <code>src/nn/network.ts</code>) each layer type knows its own backward step:</p>
+    <ul>
+      <li><b>Dense:</b> exactly the two rules above (<code>linearWeightGrad</code>, <code>linearInputGrad</code>).</li>
+      <li><b>Convolution:</b> the same rules, but one filter weight is used at hundreds of positions, so its gradient is the <b>sum</b> over all of them (section 7).</li>
+      <li><b>Max-pool:</b> only the input that won the max influenced the output, so only it receives the error. The other three get 0, which is a gate much like ReLU's.</li>
+    </ul>
+    <p>The real code averages gradients over a batch of 64 images, which is smoother than learning from one image at a time. The test suite verifies backprop against <i>numerical</i> gradients: it nudges each weight by ±0.001 and measures how the loss actually changes, for both a small MLP and a small CNN.</p>
+  </section>
+
+  <!-- 6 -->
+  <section id="adam">
+    <h2><span class="num">6</span> Adam: how the weights are actually nudged</h2>
+    <p>The simplest update is plain <b>gradient descent</b>: <code>w ← w − learning_rate × gradient</code>, as in the table above. It works, but has two problems. One learning rate rarely suits all 109 000 weights: some gradients are tiny and others large. And gradients from small batches are noisy, so steps zig-zag.</p>
+    <p><b>Adam</b> ("adaptive moment estimation", Kingma &amp; Ba, 2014) fixes both by keeping two running averages per weight:</p>
+
+    <div class="grid2">
+      <div class="callout">
+        <b>m: momentum (average gradient)</b><br>
+        <code>m ← 0.9·m + 0.1·g</code><br>
+        Smooths out noise. If the gradient keeps pointing the same way, m builds up and steps get more confident. If it flips back and forth, the flips cancel.
+      </div>
+      <div class="callout cool">
+        <b>v: average squared gradient</b><br>
+        <code>v ← 0.999·v + 0.001·g²</code><br>
+        Measures how big this weight's gradients usually are. Dividing by √v gives each weight its own scale: weights with tiny gradients still move, and ones with huge gradients don't overshoot.
+      </div>
+    </div>
+
+    <pre>step = learning_rate × m̂ / (√v̂ + ε)        learning_rate = 0.001, ε = 10⁻⁸
+m̂ = m / (1 − 0.9ᵗ),  v̂ = v / (1 − 0.999ᵗ)    "bias correction": m and v start at 0,
+                                                so early averages are scaled up</pre>
+
+    <figure>
+      <svg viewBox="0 0 820 260" role="img" aria-label="Plain gradient descent zig-zags across a narrow valley, Adam heads down it smoothly">
+        <!-- valley ellipses -->
+        <g fill="none" stroke="var(--line)" stroke-width="1.2">
+          <ellipse cx="410" cy="130" rx="370" ry="100"/>
+          <ellipse cx="410" cy="130" rx="280" ry="70"/>
+          <ellipse cx="410" cy="130" rx="190" ry="45"/>
+          <ellipse cx="410" cy="130" rx="100" ry="22"/>
+        </g>
+        <circle cx="410" cy="130" r="5" fill="var(--ok)"/>
+        <text class="ts" x="420" y="150">minimum (lowest loss)</text>
+        <!-- SGD zigzag -->
+        <polyline class="curve-cool" points="80,90 150,185 220,80 290,170 350,100 395,150 410,130"/>
+        <!-- Adam -->
+        <polyline class="curve" points="80,190 180,170 270,150 340,138 395,132 410,130"/>
+        <!-- legend -->
+        <line x1="600" y1="22" x2="630" y2="22" stroke="var(--cool)" stroke-width="2.5"/>
+        <text class="tmc" x="638" y="26">plain gradient descent</text>
+        <line x1="600" y1="42" x2="630" y2="42" stroke="var(--warm)" stroke-width="2.5"/>
+        <text class="tmw" x="638" y="46">Adam</text>
+      </svg>
+      <figcaption>Sketch of a loss "valley" that is steep across and shallow along. Plain gradient descent bounces between the steep walls; Adam's momentum cancels the bouncing and its per-weight scaling speeds up the shallow direction.</figcaption>
+    </figure>
+    <p>In this project Adam is about 40 lines in <code>src/nn/adam.ts</code> and works on any list of weight tensors (<code>Network.params()</code>), so the MLP and the CNN use the same optimiser. LLMs use the same idea, usually <b>AdamW</b>, a variant that also gently pulls weights towards zero (weight decay).</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="cnn">
+    <h2><span class="num">7</span> Convolutional networks (CNNs)</h2>
+    <p>The MLP treats the image as a list of 784 unrelated numbers. It has no idea that pixels are neighbours, and a stroke it learned to spot in one corner must be learned again for every other position. A <b>convolutional network</b> treats the image as an image. Train one with <code>npm run train -- --dataset mnist --arch cnn</code>.</p>
+
+    <h3>A filter slides over the image</h3>
+    <figure>
+      <svg viewBox="0 0 820 260" role="img" aria-label="A 3x3 filter slides over the image and produces a feature map">
+        <!-- input grid 8x8 -->
+        <g transform="translate(30,30)">
+          <g fill="var(--panel-2)" stroke="var(--line)">
+            <rect x="0" y="0" width="200" height="200"/>
+          </g>
+          <!-- vertical stroke column -->
+          <rect class="px-on" x="100" y="25" width="25" height="150"/>
+          <!-- grid lines -->
+          <g class="grid-line">
+            <line x1="25" y1="0" x2="25" y2="200"/><line x1="50" y1="0" x2="50" y2="200"/><line x1="75" y1="0" x2="75" y2="200"/>
+            <line x1="100" y1="0" x2="100" y2="200"/><line x1="125" y1="0" x2="125" y2="200"/><line x1="150" y1="0" x2="150" y2="200"/><line x1="175" y1="0" x2="175" y2="200"/>
+            <line x1="0" y1="25" x2="200" y2="25"/><line x1="0" y1="50" x2="200" y2="50"/><line x1="0" y1="75" x2="200" y2="75"/>
+            <line x1="0" y1="100" x2="200" y2="100"/><line x1="0" y1="125" x2="200" y2="125"/><line x1="0" y1="150" x2="200" y2="150"/><line x1="0" y1="175" x2="200" y2="175"/>
+          </g>
+          <rect x="75" y="75" width="75" height="75" fill="none" stroke="var(--warm)" stroke-width="3"/>
+          <text class="ts" x="100" y="222" text-anchor="middle">input image</text>
+        </g>
+        <!-- filter -->
+        <g transform="translate(300,80)">
+          <text class="t" x="0" y="-12">3×3 filter (9 weights)</text>
+          <g font-family="ui-monospace, Menlo, monospace" font-size="14" text-anchor="middle">
+            <rect class="box-cool" x="0" y="0" width="36" height="36"/><text x="18" y="23" fill="var(--fg)">−1</text>
+            <rect class="box-warm" x="36" y="0" width="36" height="36"/><text x="54" y="23" fill="var(--fg)">+2</text>
+            <rect class="box-cool" x="72" y="0" width="36" height="36"/><text x="90" y="23" fill="var(--fg)">−1</text>
+            <rect class="box-cool" x="0" y="36" width="36" height="36"/><text x="18" y="59" fill="var(--fg)">−1</text>
+            <rect class="box-warm" x="36" y="36" width="36" height="36"/><text x="54" y="59" fill="var(--fg)">+2</text>
+            <rect class="box-cool" x="72" y="36" width="36" height="36"/><text x="90" y="59" fill="var(--fg)">−1</text>
+            <rect class="box-cool" x="0" y="72" width="36" height="36"/><text x="18" y="95" fill="var(--fg)">−1</text>
+            <rect class="box-warm" x="36" y="72" width="36" height="36"/><text x="54" y="95" fill="var(--fg)">+2</text>
+            <rect class="box-cool" x="72" y="72" width="36" height="36"/><text x="90" y="95" fill="var(--fg)">−1</text>
+          </g>
+          <text class="ts" x="54" y="130" text-anchor="middle">"vertical stroke detector"</text>
+        </g>
+        <line class="arrow" x1="430" y1="134" x2="530" y2="134"/>
+        <text class="ts" x="480" y="124" text-anchor="middle">slide everywhere</text>
+        <!-- feature map 6x6 -->
+        <g transform="translate(550,55)">
+          <rect x="0" y="0" width="150" height="150" fill="var(--panel-2)" stroke="var(--line)"/>
+          <rect x="50" y="0" width="25" height="150" fill="var(--warm)" opacity="0.9"/>
+          <rect x="25" y="0" width="25" height="150" fill="var(--cool)" opacity="0.35"/>
+          <rect x="75" y="0" width="25" height="150" fill="var(--cool)" opacity="0.35"/>
+          <text class="t" x="75" y="176" text-anchor="middle">feature map</text>
+          <text class="ts" x="75" y="194" text-anchor="middle">bright where the pattern is</text>
+        </g>
+      </svg>
+      <figcaption>At every position the 9 pixels under the filter are multiplied by its 9 weights and summed: the same neuron calculation as section 3, applied everywhere. The result is a <b>feature map</b> that lights up wherever the filter's pattern appears.</figcaption>
+    </figure>
+
+    <p>Three ideas make CNNs work:</p>
+    <ul>
+      <li><b>Local connections.</b> Each output looks only at a 3×3 patch, not the whole image. Strokes, edges and corners are local.</li>
+      <li><b>Weight sharing.</b> The same 9 weights are reused at every position, so a pattern learned once is recognised anywhere. That's why the CNN needs only about 28 000 weights against the MLP's 109 000.</li>
+      <li><b>Stacking and pooling.</b> <i>Max-pooling</i> keeps the strongest value of each 2×2 block, halving the map size, so the next layer's 3×3 filters see a larger area. Layer 1 finds edges; layer 2 combines them into curves, loops and corners. The final dense layers (an MLP) combine those into "this is a 3".</li>
+    </ul>
+
+    <figure>
+      <svg viewBox="0 0 820 230" role="img" aria-label="Default CNN architecture with shapes">
+        <g font-family="system-ui, sans-serif">
+          <rect class="box" x="10" y="70" width="70" height="70" rx="4"/>
+          <text class="t" x="45" y="160" text-anchor="middle">input</text>
+          <text class="ts" x="45" y="176" text-anchor="middle">1×28×28</text>
+          <line class="arrow" x1="85" y1="105" x2="115" y2="105"/>
+          <!-- conv1 stack -->
+          <rect class="box-cool" x="135" y="60" width="62" height="62" rx="3"/>
+          <rect class="box-cool" x="128" y="67" width="62" height="62" rx="3"/>
+          <rect class="box-cool" x="121" y="74" width="62" height="62" rx="3"/>
+          <text class="t" x="160" y="160" text-anchor="middle">conv 8</text>
+          <text class="ts" x="160" y="176" text-anchor="middle">8×26×26</text>
+          <line class="arrow" x1="205" y1="105" x2="235" y2="105"/>
+          <rect class="box" x="250" y="80" width="36" height="36" rx="3"/>
+          <rect class="box" x="244" y="86" width="36" height="36" rx="3"/>
+          <text class="t" x="265" y="160" text-anchor="middle">pool</text>
+          <text class="ts" x="265" y="176" text-anchor="middle">8×13×13</text>
+          <line class="arrow" x1="295" y1="105" x2="325" y2="105"/>
+          <rect class="box-cool" x="348" y="76" width="34" height="34" rx="3"/>
+          <rect class="box-cool" x="343" y="81" width="34" height="34" rx="3"/>
+          <rect class="box-cool" x="338" y="86" width="34" height="34" rx="3"/>
+          <rect class="box-cool" x="333" y="91" width="34" height="34" rx="3"/>
+          <text class="t" x="358" y="160" text-anchor="middle">conv 16</text>
+          <text class="ts" x="358" y="176" text-anchor="middle">16×11×11</text>
+          <line class="arrow" x1="392" y1="105" x2="422" y2="105"/>
+          <rect class="box" x="440" y="92" width="18" height="18" rx="2"/>
+          <rect class="box" x="436" y="96" width="18" height="18" rx="2"/>
+          <rect class="box" x="432" y="100" width="18" height="18" rx="2"/>
+          <text class="t" x="446" y="160" text-anchor="middle">pool</text>
+          <text class="ts" x="446" y="176" text-anchor="middle">16×5×5 = 400</text>
+          <line class="arrow" x1="470" y1="105" x2="510" y2="105"/>
+          <g>
+            <circle class="node" cx="530" cy="70" r="7"/><circle class="node-hot" cx="530" cy="92" r="7"/>
+            <circle class="node" cx="530" cy="114" r="7"/><circle class="node-mid" cx="530" cy="136" r="7"/>
+          </g>
+          <text class="t" x="530" y="160" text-anchor="middle">dense 64</text>
+          <line class="arrow" x1="545" y1="105" x2="585" y2="105"/>
+          <g>
+            <circle class="node" cx="605" cy="80" r="7"/><circle class="node-hot" cx="605" cy="104" r="9"/><circle class="node" cx="605" cy="128" r="7"/>
+          </g>
+          <text class="t" x="605" y="160" text-anchor="middle">output</text>
+          <text class="ts" x="605" y="176" text-anchor="middle">10 or 26</text>
+          <rect class="box" x="650" y="60" width="160" height="96" rx="8"/>
+          <text class="ts" x="662" y="82">conv layers find</text>
+          <text class="ts" x="662" y="100">patterns anywhere;</text>
+          <text class="ts" x="662" y="122">the dense head is</text>
+          <text class="ts" x="662" y="140">a small MLP</text>
+        </g>
+        <text class="tm" x="10" y="212">npm run train -- --dataset mnist --arch cnn --filters 8,16 --hidden 64</text>
+      </svg>
+      <figcaption>The default CNN. Each "conv" step loses a 1-pixel border (3×3, no padding); each pool halves the size, rounding down.</figcaption>
+    </figure>
+
+    <h3>Learning in a CNN</h3>
+    <p>The backward pass uses the same two rules. Weight sharing adds one twist: a filter weight was used at every position, so its gradient is the <b>sum</b> of "input under it × error at that output" over all positions. If the filter helped at one spot and hurt at another, the sum decides which way it moves. Max-pool passes each error only to the input that won the max.</p>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th></th><th>MLP</th><th>CNN</th></tr>
+        <tr><td>Knows that pixels are neighbours</td><td>no</td><td>yes</td></tr>
+        <tr><td>Pattern learned in one spot works elsewhere</td><td>no</td><td>yes (weight sharing)</td></tr>
+        <tr><td>Weights (default settings)</td><td class="num">109 386</td><td class="num">27 562</td></tr>
+        <tr><td>Digits / letters test accuracy</td><td class="num">97.6 % / 87.9 %</td><td class="num">98.1 % / 91.3 %</td></tr>
+        <tr><td>Training time per digits epoch (laptop CPU)</td><td class="num">~15 s</td><td class="num">~40 s</td></tr>
+      </table>
+    </div>
+    <p class="muted">The CNN has fewer weights but more compute, because each filter runs at hundreds of positions per image. That is why CNNs became practical with GPUs. <code>--filters 32,64 --hidden 128 --epochs 5</code> trains a bigger, more accurate one (about 99 %+ on digits), at several times the training time.</p>
+  </section>
+
+  <!-- 8 -->
+  <section id="data">
+    <h2><span class="num">8</span> The data</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th></th><th>MNIST digits</th><th>EMNIST letters</th></tr>
+        <tr><td>Classes</td><td>0–9 (10)</td><td>A–Z (26, upper- and lower-case together)</td></tr>
+        <tr><td>Images</td><td>60 000 train / 10 000 test</td><td>124 800 train / 20 800 test</td></tr>
+        <tr><td>Source</td><td>4 small .gz files (~11 MB)</td><td>one 562 MB zip from NIST, extracted once</td></tr>
+        <tr><td>Fix-ups</td><td>none</td><td>images are stored transposed, so they're flipped back; labels 1–26 become 0–25</td></tr>
+        <tr><td>Character size</td><td>ink fits a 20×20 box</td><td>ink fills about 24×24</td></tr>
+      </table>
+    </div>
+    <p>Both come in the simple <b>IDX</b> binary format: a short header (type and dimensions) followed by raw bytes, one byte per pixel (0–255). Downloads go to a <code>.part</code> file first and are renamed only when complete, so an interrupted download is never mistaken for a finished one.</p>
+    <p><b>Centring.</b> MNIST digits were centred by their <i>centre of mass</i>; EMNIST letters by their <i>bounding box</i>. Preparing your drawing the same way matters: on the stored test images, centring letters by mass instead of by box costs the letters MLP about 8 points and the CNN about 3. The choice is stored in each model file (<code>preprocessing.center</code>).</p>
+    <p><b>Normalisation.</b> Pixels are scaled to 0–1. Then the dataset's average brightness is subtracted and the result is divided by its standard deviation (for MNIST, mean ≈ 0.13 and std ≈ 0.31). The mean and std are saved with the model so the browser applies exactly the same step. One side effect: a blank pixel becomes about −0.42, not 0, so blank areas do feed into the network a little.</p>
+  </section>
+
+  <!-- 9 -->
+  <section id="snapshots">
+    <h2><span class="num">9</span> Snapshots and the timeline</h2>
+    <p>While training, the trainer saves copies of all the weights at fixed points. They are close together at the start, where the network changes fastest, and then come one per epoch. Each snapshot records the test accuracy at that moment, and the slider at the bottom of the viewer steps through them.</p>
+    <figure>
+      <svg viewBox="0 0 820 150" role="img" aria-label="Snapshot timeline">
+        <line class="axis" x1="30" y1="70" x2="790" y2="70"/>
+        <circle class="node-mid" cx="40" cy="70" r="6"/><text class="ts" x="40" y="96" text-anchor="middle">0</text>
+        <circle class="node-mid" cx="70" cy="70" r="5"/><circle class="node-mid" cx="95" cy="70" r="5"/>
+        <circle class="node-mid" cx="120" cy="70" r="5"/><circle class="node-mid" cx="145" cy="70" r="5"/>
+        <circle class="node-mid" cx="170" cy="70" r="5"/><circle class="node-mid" cx="195" cy="70" r="5"/>
+        <circle class="node-mid" cx="220" cy="70" r="5"/><circle class="node-mid" cx="245" cy="70" r="5"/>
+        <circle class="node-mid" cx="270" cy="70" r="5"/><circle class="node-mid" cx="295" cy="70" r="5"/>
+        <text class="ts" x="170" y="96" text-anchor="middle">50 · 100 · 250 · … · 40 000 images</text>
+        <text class="ts" x="170" y="40" text-anchor="middle">quick checks (2 000 test images)</text>
+        <circle class="node-hot" cx="390" cy="70" r="8"/><text class="ts" x="390" y="96" text-anchor="middle">epoch 1</text>
+        <circle class="node-hot" cx="490" cy="70" r="8"/><text class="ts" x="490" y="96" text-anchor="middle">2</text>
+        <circle class="node-hot" cx="590" cy="70" r="8"/><text class="ts" x="590" y="96" text-anchor="middle">3</text>
+        <circle class="node-hot" cx="690" cy="70" r="8"/><text class="ts" x="690" y="96" text-anchor="middle">4</text>
+        <circle class="node-hot" cx="780" cy="70" r="8"/><text class="ts" x="780" y="96" text-anchor="middle">5</text>
+        <text class="ts" x="585" y="40" text-anchor="middle">full test set (10 000 images)</text>
+        <text class="tm" x="40" y="132">digits MLP: 9.7 % → 72 % after ~1 000 images → 89 % after ~10 000 → 95.9 % (epoch 1) → 97.6 %</text>
+      </svg>
+      <figcaption>Snapshots land on whole batches of 64, so "50 images" is really 64. Drag to the first snapshot and the predictions become near-random again.</figcaption>
+    </figure>
+<pre>public/models/
+  index.json                list of trained models (feeds the model picker)
+  mnist/                    MLP models keep the plain dataset name
+  mnist-cnn/                CNN models get a -cnn suffix
+    model.json              labels, layer list, mean/std, character size, snapshots + accuracies
+    snapshots/000.json …    every weight tensor: float16, little-endian, base64
+    samples.bin             100 test images per class for the sample buttons</pre>
+    <p>Weights are stored as 16-bit floats, which is half the size of normal 32-bit floats and precise enough for viewing. Older model files (format v1, MLP only) are still read and upgraded on load.</p>
+  </section>
+
+  <!-- 10 -->
+  <section id="browser">
+    <h2><span class="num">10</span> What happens when you draw</h2>
+    <p>Every brush stroke runs the whole network again, which takes well under a millisecond, so everything updates live.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 245" role="img" aria-label="Browser flow: drawing, size normalisation, centring, normalising, forward pass, chart and 3D">
+        <g transform="translate(10,40)">
+          <rect class="box" x="0" y="0" width="96" height="96" rx="4"/>
+          <rect class="px-on" x="8" y="10" width="26" height="6"/>
+          <rect class="px-on" x="28" y="16" width="6" height="26"/>
+          <text class="t" x="48" y="118" text-anchor="middle">Your drawing</text>
+          <text class="ts" x="48" y="134" text-anchor="middle">tiny, in a corner</text>
+        </g>
+        <line class="arrow" x1="112" y1="88" x2="142" y2="88"/>
+        <g transform="translate(150,40)">
+          <rect class="box" x="0" y="0" width="96" height="96" rx="4"/>
+          <rect x="20" y="20" width="56" height="56" fill="none" stroke="var(--warm)" stroke-dasharray="4 3"/>
+          <rect class="px-on" x="20" y="20" width="56" height="12"/>
+          <rect class="px-on" x="64" y="32" width="12" height="44"/>
+          <text class="t" x="48" y="118" text-anchor="middle">1 · Scale</text>
+          <text class="ts" x="48" y="134" text-anchor="middle">ink fits 20×20 (24 letters)</text>
+        </g>
+        <line class="arrow" x1="252" y1="88" x2="282" y2="88"/>
+        <g transform="translate(290,40)">
+          <rect class="box" x="0" y="0" width="96" height="96" rx="4"/>
+          <rect class="px-on" x="24" y="22" width="52" height="11"/>
+          <rect class="px-on" x="65" y="33" width="11" height="42"/>
+          <circle cx="48" cy="48" r="3" fill="var(--warm)"/>
+          <text class="t" x="48" y="118" text-anchor="middle">2 · Centre</text>
+          <text class="ts" x="48" y="134" text-anchor="middle">digits: mass · letters: box</text>
+        </g>
+        <line class="arrow" x1="392" y1="88" x2="422" y2="88"/>
+        <g transform="translate(428,48)">
+          <rect class="box" x="0" y="0" width="110" height="80" rx="10"/>
+          <text class="t" x="55" y="34" text-anchor="middle">3 · Normalise</text>
+          <text class="ts" x="55" y="54" text-anchor="middle">(x − mean) / std</text>
+        </g>
+        <line class="arrow" x1="543" y1="88" x2="573" y2="88"/>
+        <g transform="translate(578,48)">
+          <rect class="box-cool" x="0" y="0" width="100" height="80" rx="10"/>
+          <text class="t" x="50" y="34" text-anchor="middle">Forward</text>
+          <text class="ts" x="50" y="54" text-anchor="middle">all activations</text>
+        </g>
+        <line class="arrow" x1="682" y1="72" x2="705" y2="52"/>
+        <line class="arrow" x1="682" y1="104" x2="705" y2="124"/>
+        <rect class="box" x="710" y="25" width="100" height="44" rx="8"/>
+        <text class="t" x="760" y="52" text-anchor="middle">bars</text>
+        <rect class="box" x="710" y="108" width="100" height="44" rx="8"/>
+        <text class="t" x="760" y="135" text-anchor="middle">3D view</text>
+        <text class="ts" x="410" y="205" text-anchor="middle">Each dataset was prepared this way (MNIST centred by mass, EMNIST by bounding box), so steps 1–2 make predictions much less sensitive to size and position.</text>
+        <text class="ts" x="410" y="225" text-anchor="middle">A single tap (ink ≤ 2×2 px) is not scaled up. Settings → "Normalise drawing size" switches step 1 off to compare.</text>
+      </svg>
+    </figure>
+
+    <h3>Reading the 3D view</h3>
+    <div class="grid2">
+      <figure style="margin:0">
+        <svg viewBox="0 0 360 160" role="img" aria-label="Node colour scale">
+          <defs>
+            <linearGradient id="heat" x1="0" x2="1">
+              <stop offset="0" stop-color="#1d2a44"/><stop offset="0.5" stop-color="#3d8bfd"/><stop offset="1" stop-color="#ffb347"/>
+            </linearGradient>
+          </defs>
+          <text class="t" x="10" y="24">Spheres and feature maps = activation</text>
+          <rect x="10" y="44" width="340" height="22" rx="4" fill="url(#heat)"/>
+          <text class="ts" x="10" y="86">silent (0)</text>
+          <text class="ts" x="350" y="86" text-anchor="end">most active in its layer</text>
+          <text class="ts" x="10" y="118">Each layer is scaled to its own maximum;</text>
+          <text class="ts" x="10" y="136">outputs show the probability directly.</text>
+        </svg>
+      </figure>
+      <figure style="margin:0">
+        <svg viewBox="0 0 360 160" role="img" aria-label="Connection colour meaning">
+          <text class="t" x="10" y="24">Lines = input × weight</text>
+          <line x1="10" y1="54" x2="140" y2="54" stroke="var(--warm)" stroke-width="4"/>
+          <text class="ts" x="150" y="58">strong positive: excites</text>
+          <line x1="10" y1="84" x2="140" y2="84" stroke="var(--cool)" stroke-width="4"/>
+          <text class="ts" x="150" y="88">strong negative: inhibits</text>
+          <line x1="10" y1="114" x2="140" y2="114" stroke="var(--line)" stroke-width="2"/>
+          <text class="ts" x="150" y="118">dim: contributes ~nothing</text>
+          <text class="ts" x="10" y="148">White = many bright lines overlapping.</text>
+        </svg>
+      </figure>
+    </div>
+    <ul>
+      <li><b>MLP models:</b> every layer is drawn as spheres, with lines for the strongest N weights per neuron (N is set in Settings).</li>
+      <li><b>CNN models:</b> each conv layer is a grid of small glowing images, one feature map per filter, lit where that filter's pattern appears in your drawing. Pool layers aren't drawn separately, and there are no lines between maps, to keep it readable. Click a map to see its 3×3 filter weights (one small grid per input channel) and where it fires most strongly.</li>
+      <li><b>Click a sphere</b> to see bias + Σ(input × weight) → activation and the strongest incoming and outgoing contributions. In a CNN, the first dense layer's inputs are named like "map 7 · (3, 3)".</li>
+    </ul>
+  </section>
+
+  <!-- 11 -->
+  <section id="transformer">
+    <h2><span class="num">11</span> A tiny transformer that writes text</h2>
+    <p>The text models (<code>npm run train -- --dataset shakespeare</code>) use the architecture behind real LLMs, shrunk to about 113&nbsp;000 weights and written by hand like the rest. The task changes from "which character is in this picture?" to "<b>which character comes next?</b>". The model writes text by asking that question over and over, appending its answer each time.</p>
+
+    <h3>Tokens and embeddings</h3>
+    <p>Every distinct character in the training text gets an id (Tiny Shakespeare has 65: letters, digits, punctuation, space and newline). The model can't compute with an id, so it looks up a learned list of 64 numbers for it: the character's <b>embedding</b>. A second learned list per <i>position</i> (1st, 2nd, … 64th character) is added, so the model knows where each character sits. Both tables are ordinary weights, trained by backprop.</p>
+
+    <h3>Attention, worked through</h3>
+    <p>Say the model reads "c", "a", "t" and must decide what follows "t". In one attention head, "t" builds a <b>query</b> and every character so far builds a <b>key</b> and a <b>value</b> (three small dense layers, as in section 12). Query·key gives a score per earlier character, a softmax turns the scores into weights, and "t" receives the weighted mix of the values:</p>
+    <figure>
+      <svg viewBox="0 0 820 280" role="img" aria-label="Attention of the character t over c, a and t with weights 0.63, 0.14 and 0.23">
+        <g font-family="ui-monospace, Menlo, monospace" font-size="20" text-anchor="middle">
+          <rect class="box-warm" x="120" y="170" width="70" height="50" rx="8"/><text x="155" y="202" fill="var(--fg)" font-weight="700">c</text>
+          <rect class="box" x="300" y="170" width="70" height="50" rx="8"/><text x="335" y="202" fill="var(--fg)">a</text>
+          <rect class="box-cool" x="480" y="170" width="70" height="50" rx="8"/><text x="515" y="202" fill="var(--fg)" font-weight="700">t</text>
+        </g>
+        <path d="M515,168 C500,40 175,40 155,168" fill="none" stroke="var(--warm)" stroke-width="7" opacity="0.9"/>
+        <path d="M515,168 C505,100 350,100 335,168" fill="none" stroke="var(--warm)" stroke-width="2" opacity="0.6"/>
+        <path d="M500,168 C470,105 560,105 530,168" fill="none" stroke="var(--warm)" stroke-width="3" opacity="0.7"/>
+        <text class="tmw" x="335" y="52" text-anchor="middle">score 2.0 → 0.63</text>
+        <text class="ts" x="420" y="112" text-anchor="middle">0.5 → 0.14</text>
+        <text class="ts" x="560" y="120">1.0 → 0.23 (itself)</text>
+        <text class="tm" x="335" y="262" text-anchor="middle">new "t" = 0.63·v(c) + 0.14·v(a) + 0.23·v(t)</text>
+      </svg>
+      <figcaption>Softmax of the scores 2.0, 0.5 and 1.0: e<sup>2</sup> ≈ 7.39, e<sup>0.5</sup> ≈ 1.65, e<sup>1</sup> ≈ 2.72, sum ≈ 11.76, so the weights are 0.63, 0.14 and 0.23. They sum to 1.</figcaption>
+    </figure>
+    <p>Two details make this a language model:</p>
+    <ul>
+      <li><b>Causal mask.</b> A character may only look at itself and earlier characters, never later ones (they get weight 0). That's what makes it possible to generate left to right: the model never relied on text that doesn't exist yet.</li>
+      <li><b>Several heads.</b> Each block runs 4 heads side by side, each with its own query/key/value weights, so each can learn a different habit: one looks at the previous character, another at the start of the line, another at the last space. In the viewer each head has its own color.</li>
+    </ul>
+
+    <h3>Blocks, residual stream and LayerNorm</h3>
+    <p>A <b>block</b> is attention followed by an MLP (64 → 256 → 64 with the smooth GELU activation instead of ReLU). Each part <i>adds</i> its output to a running vector per character, the <b>residual stream</b>, instead of replacing it. Before each part, <b>LayerNorm</b> rescales the vector to mean 0 and variance 1, which keeps training stable. Our model has 2 blocks. The 3D view shows the residual stream after the embeddings and after each block: one column per stage, one thin strip per character.</p>
+
+    <h3>Training on every position</h3>
+    <p>One training example is a 65-character window of the book. The model predicts the next character at <i>every</i> one of the first 64 positions at once (thanks to the mask, position 10 only sees characters 1–10), so one window gives 64 labeled examples for free. Loss, error (p − one-hot) and backprop are exactly as for digits; backprop just also flows through attention. Each step uses 32 windows, and 1000 steps take about 16 minutes on a laptop CPU.</p>
+
+    <h3>Generating: sampling and temperature</h3>
+    <p>To write, the model takes the last (up to) 64 characters, computes probabilities for the next one, and picks one at random according to those probabilities. Before the softmax, the scores are divided by the <b>temperature</b>: below 1 the favorite wins more often (safe and repetitive), above 1 the odds even out (creative, then nonsense). Then the new character is appended and everything repeats.</p>
+    <div class="callout cool">In the viewer, pick the Shakespeare model, type <code>ROMEO:</code> and press <b>Step</b> repeatedly: the 3D network lights up one part at a time (text → embedding → attention → MLP → block 2 → output → pick) and a caption explains each with the real numbers. <b>Play</b> runs the steps by itself; at high speed it just writes. Click any character to see its own prediction, and drag the timeline to compare an untrained model (flat attention, random output) with the trained one.</div>
+  </section>
+
+  <!-- 12 -->
+  <section id="llm">
+    <h2><span class="num">12</span> From here to large language models</h2>
+    <p>An LLM uses the same ingredients as this project, and section 11 already showed a tiny one: neurons, weights, nonlinearities, softmax, cross-entropy, backprop and an Adam-style optimiser. What changes is the architecture (the <b>transformer</b>), the task (predicting the next piece of text) and the scale.</p>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th></th><th>This project</th><th>An LLM</th></tr>
+        <tr><td>Input</td><td>a 28×28 image, or up to 64 characters</td><td>a sequence of <b>tokens</b> (word pieces), each turned into a vector called an <i>embedding</i></td></tr>
+        <tr><td>Architecture</td><td>MLP, small CNN, or a 2-block transformer</td><td>a <b>transformer</b>: dozens to over a hundred layers, each = <b>attention</b> + an MLP block like ours</td></tr>
+        <tr><td>Task</td><td>which of 10 / 26 classes? / which character next?</td><td>which token comes next? (a softmax over ~50 000–200 000 tokens)</td></tr>
+        <tr><td>Labels</td><td>humans labelled every image</td><td>none needed: the next word in real text is the answer (<i>self-supervised</i>)</td></tr>
+        <tr><td>Weights</td><td>28 k – 113 k</td><td>billions to trillions</td></tr>
+        <tr><td>Training</td><td>~1 minute (images) to ~16 minutes (text) on a laptop CPU</td><td>weeks to months on thousands of GPUs / TPUs</td></tr>
+        <tr><td>Output</td><td>one answer (images), or text in a loop (transformer)</td><td>generates text in a loop, one token per forward pass</td></tr>
+      </table>
+    </div>
+
+    <h3>Attention: connections computed on the fly</h3>
+    <p>In our networks the connections are fixed after training: pixel (14, 14) always reaches hidden neuron #5 with the same weight. Language needs something more flexible. In "The cat sat because <b>it</b> was tired", the model must work out that "it" refers to "cat", and that link depends on the sentence. <b>Attention</b> lets every token decide, from the input itself, how much to look at every earlier token.</p>
+
+    <figure>
+      <svg viewBox="0 0 820 230" role="img" aria-label="Attention from the token 'it' to earlier tokens; strongest to 'cat'">
+        <g font-family="system-ui, sans-serif" font-size="15" text-anchor="middle">
+          <rect class="box" x="20" y="150" width="80" height="40" rx="8"/><text x="60" y="176" fill="var(--fg)">The</text>
+          <rect class="box-warm" x="115" y="150" width="80" height="40" rx="8"/><text x="155" y="176" fill="var(--fg)" font-weight="700">cat</text>
+          <rect class="box" x="210" y="150" width="80" height="40" rx="8"/><text x="250" y="176" fill="var(--fg)">sat</text>
+          <rect class="box" x="305" y="150" width="100" height="40" rx="8"/><text x="355" y="176" fill="var(--fg)">because</text>
+          <rect class="box-cool" x="420" y="150" width="80" height="40" rx="8"/><text x="460" y="176" fill="var(--fg)" font-weight="700">it</text>
+          <rect class="box" x="515" y="150" width="80" height="40" rx="8"/><text x="555" y="176" fill="var(--muted)">was</text>
+          <rect class="box" x="610" y="150" width="80" height="40" rx="8"/><text x="650" y="176" fill="var(--muted)">tired</text>
+        </g>
+        <!-- arcs from "it" to earlier tokens -->
+        <path d="M460,148 C440,40 180,40 155,148" fill="none" stroke="var(--warm)" stroke-width="5" opacity="0.9"/>
+        <path d="M460,148 C445,90 280,90 250,148" fill="none" stroke="var(--warm)" stroke-width="2" opacity="0.6"/>
+        <path d="M460,148 C450,110 370,110 355,148" fill="none" stroke="var(--warm)" stroke-width="1.5" opacity="0.5"/>
+        <path d="M460,148 C440,20 90,20 60,148" fill="none" stroke="var(--warm)" stroke-width="1" opacity="0.4"/>
+        <text class="tmw" x="292" y="47">0.71</text>
+        <text class="ts" x="345" y="96">0.12</text>
+        <text class="ts" x="432" y="104">0.09</text>
+        <text class="ts" x="250" y="34">0.08</text>
+        <text class="ts" x="560" y="216" text-anchor="middle">later tokens are hidden (a model can't peek at the future it must predict)</text>
+      </svg>
+      <figcaption>Illustrative attention weights for "it" in one attention "head". The weights come from a softmax, so they sum to 1, and they are computed fresh for every sentence.</figcaption>
+    </figure>
+
+    <p>How one attention step works, for each token:</p>
+    <ol>
+      <li>Three small dense layers turn the token's vector into a <b>query</b> ("what am I looking for?"), a <b>key</b> ("what do I contain?") and a <b>value</b> ("what I'll pass on").</li>
+      <li>The token's query is compared with every earlier token's key (a dot product). Large means relevant.</li>
+      <li>A <b>softmax</b> turns those scores into weights that sum to 1. This is the same softmax as our output layer.</li>
+      <li>The token receives the weighted sum of the earlier tokens' values. "it" now carries information about "cat".</li>
+    </ol>
+    <p>Many attention "heads" run side by side, each free to learn a different kind of relation (grammar, references, topic). Then each token goes through an MLP block, which is the kind of network this project builds. Each layer <i>adds</i> its result to a running "residual stream" instead of replacing it. That lets the error signal reach the early layers of a very deep stack without fading, and it's why LLMs can have a hundred layers while a plain MLP gets hard to train beyond a few.</p>
+
+    <h3>How LLMs learn: two kinds of backward signal</h3>
+    <figure>
+      <svg viewBox="0 0 820 270" role="img" aria-label="Pre-training with next-token labels versus feedback training with a reward score">
+        <!-- pretraining -->
+        <rect class="box-cool" x="20" y="20" width="370" height="230" rx="12"/>
+        <text class="t" x="40" y="48">① Pre-training: the next word is the label</text>
+        <g font-family="ui-monospace, Menlo, monospace" font-size="13">
+          <text x="40" y="84" fill="var(--muted)">input </text>
+          <text x="100" y="84" fill="var(--fg)">The   cat   sat   on    the</text>
+          <text x="40" y="108" fill="var(--muted)">target</text>
+          <text x="100" y="108" fill="var(--warm)">cat   sat   on    the   mat</text>
+        </g>
+        <text class="ts" x="40" y="140">At every position: softmax over the vocabulary,</text>
+        <text class="ts" x="40" y="158">loss = −log p(actual next token),</text>
+        <text class="ts" x="40" y="176">error = p − one-hot, exactly like our digits.</text>
+        <text class="ts" x="40" y="204">Backprop flows through the MLP blocks and through</text>
+        <text class="ts" x="40" y="222">attention, so the model learns which earlier words to</text>
+        <text class="ts" x="40" y="240">look at. Trillions of tokens, no human labels.</text>
+        <!-- RL -->
+        <rect class="box-warm" x="430" y="20" width="370" height="230" rx="12"/>
+        <text class="t" x="450" y="48">② Feedback training: a score, not an answer</text>
+        <rect class="box" x="450" y="66" width="150" height="40" rx="8"/>
+        <text class="ts" x="525" y="91" text-anchor="middle">model writes answer</text>
+        <line class="arrow" x1="605" y1="86" x2="635" y2="86"/>
+        <rect class="box" x="640" y="66" width="140" height="40" rx="8"/>
+        <text class="ts" x="710" y="84" text-anchor="middle">judge scores it</text>
+        <text class="tmw" x="710" y="100" text-anchor="middle">+2.3</text>
+        <text class="ts" x="450" y="140">Better than expected → raise the probability of the</text>
+        <text class="ts" x="450" y="158">tokens it chose; worse → lower them.</text>
+        <text class="ts" x="450" y="186">The judge is a reward model trained on human or AI</text>
+        <text class="ts" x="450" y="204">rankings (RLHF / RLAIF), or an automatic check such</text>
+        <text class="ts" x="450" y="222">as "do the tests pass?". It is still backprop, but the</text>
+        <text class="ts" x="450" y="240">error at the top comes from a grade, not a label.</text>
+      </svg>
+      <figcaption>Both stages use the same backward pass as section 5; only the source of the error at the top differs.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table>
+        <tr><th></th><th>Our digit network</th><th>LLM pre-training</th><th>LLM feedback training</th></tr>
+        <tr><td>Signal</td><td>the correct label "7"</td><td>the actual next token, at every position</td><td>a score for the whole answer</td></tr>
+        <tr><td>Who provides it</td><td>the dataset's labels</td><td>the text itself</td><td>humans, an AI judge or an automatic check</td></tr>
+        <tr><td>Error at the top</td><td>p − one-hot</td><td>p − one-hot</td><td>(reward − expected) applied to the chosen tokens</td></tr>
+        <tr><td>Backward pass</td><td>backprop</td><td>backprop (through attention too)</td><td>backprop</td></tr>
+        <tr><td>Optimiser</td><td>Adam</td><td>AdamW</td><td>AdamW</td></tr>
+      </table>
+    </div>
+
+    <p>Where CNNs fit: they are built for grid-shaped data like images and dominated computer vision from about 2012 to 2020. Transformers now handle images too: a <i>Vision Transformer</i> cuts an image into patches and treats them like tokens. The MLP, the simplest building block, lives inside both: as the dense head at the end of a CNN, and as the feed-forward block in every transformer layer.</p>
+  </section>
+
+  <!-- 13 -->
+  <section id="files">
+    <h2><span class="num">13</span> Code map</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Folder</th><th>Responsibility</th></tr>
+        <tr><td><code>src/nn/</code></td><td><code>Network</code> of <code>Dense</code>, <code>Conv2d</code> and <code>MaxPool</code> layers (forward + backward), ReLU / softmax / cross-entropy, Adam, float16 codec, model-file validation (v1 + v2), size normalisation, centring, neuron and feature-map inspection. <code>src/nn/transformer/</code>: character tokenizer, embedding / LayerNorm / GELU / causal attention with their backward passes, the <code>Transformer</code> model, sampling, per-position inspection. Shared by both sides.</td></tr>
+        <tr><td><code>src/data/</code></td><td>Downloads (with <code>.part</code> safety), unzip / gunzip, IDX parser, EMNIST transpose and label shift, mean / std; text corpora (Tiny Shakespeare, names, any <code>--file</code>).</td></tr>
+        <tr><td><code>src/trainer/</code></td><td>Command-line options (<code>--arch</code>, <code>--filters</code>, <code>--steps</code>, …), the image training loop and <code>train-text.ts</code> for transformers, snapshot schedules, writing <code>public/models/</code>.</td></tr>
+        <tr><td><code>src/web/</code></td><td>Shared Three.js scene host; image mode (sketchpad, sample buttons, settings, neuron / filter inspector, spheres and feature maps); text mode (prompt, generation loop, attention panel, residual-stream columns and attention arcs); probability chart, timeline, model loading with fallback.</td></tr>
+        <tr><td><code>test/</code></td><td>150+ Vitest tests: gradient checks for MLP, CNN and every transformer part, a "never looks ahead" test, XOR, conv / pool values, a golden test that the refactored MLP matches the original exactly, float16, IDX, downloads, export, CLI, size normalisation, startup fallback.</td></tr>
+      </table>
+    </div>
+
+    <h3>Commands</h3>
+<pre>npm install
+npm run train -- --dataset mnist                       # digits, MLP
+npm run train -- --dataset mnist --arch cnn            # digits, CNN
+npm run train -- --dataset emnist-letters --arch cnn   # letters, CNN
+npm run train -- --dataset mnist --arch cnn --filters 32,64 --hidden 128 --epochs 5
+npm run train -- --dataset shakespeare                 # text, transformer (~16 min)
+npm run train -- --dataset text --file book.txt        # any UTF-8 text
+npm run dev                                            # viewer
+npm test                                               # unit tests</pre>
+  </section>
+</main>
+</body>
+</html>

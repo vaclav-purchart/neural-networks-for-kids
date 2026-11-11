@@ -1,0 +1,409 @@
+:root {
+	color-scheme: dark;
+	--bg: #0b0f17;
+	--panel: rgba(17, 24, 39, 0.9);
+	--border: #263042;
+	--text: #e5e9f2;
+	--muted: #8b95a7;
+	--warm: #ff9f43;
+	--cool: #3d8bfd;
+	font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* {
+	box-sizing: border-box;
+}
+html,
+body {
+	margin: 0;
+	height: 100%;
+	background: var(--bg);
+	color: var(--text);
+	overflow: hidden;
+}
+#scene {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.panel {
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	backdrop-filter: blur(6px);
+	z-index: 2;
+}
+.topbar {
+	position: fixed;
+	top: 12px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	padding: 8px 14px;
+	font-size: 14px;
+	z-index: 3;
+}
+.left {
+	position: fixed;
+	top: 12px;
+	left: 12px;
+	width: 260px;
+	padding: 12px;
+}
+.right {
+	position: fixed;
+	top: 12px;
+	right: 12px;
+	width: 240px;
+	padding: 12px;
+	max-height: calc(100vh - 130px);
+	overflow: auto;
+}
+h2 {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--muted);
+	margin: 0 0 8px;
+}
+
+button,
+select {
+	background: #1c2536;
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 5px 10px;
+	font: inherit;
+	font-size: 13px;
+	cursor: pointer;
+}
+button:hover,
+select:hover {
+	border-color: var(--cool);
+}
+.row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin-top: 8px;
+}
+.muted {
+	color: var(--muted);
+	font-size: 12px;
+}
+
+#sketchpad canvas {
+	width: 100%;
+	aspect-ratio: 1;
+	display: block;
+	border-radius: 6px;
+	cursor: crosshair;
+	touch-action: none;
+}
+.sample-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+	gap: 4px;
+	margin-top: 6px;
+}
+.sample-btn {
+	padding: 4px 0;
+}
+#samples > .muted {
+	display: block;
+	margin-top: 10px;
+}
+
+.chart-row {
+	display: grid;
+	grid-template-columns: 22px 1fr 48px;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	height: 22px;
+}
+#chart.compact .chart-row {
+	height: 15px;
+	font-size: 11px;
+}
+.chart-track {
+	background: #1c2536;
+	border-radius: 3px;
+	height: 60%;
+	overflow: hidden;
+}
+.chart-bar {
+	height: 100%;
+	width: 0;
+	background: var(--cool);
+	transition: width 80ms linear;
+}
+.chart-row.top .chart-bar {
+	background: var(--warm);
+}
+.chart-row.top .chart-label {
+	color: var(--warm);
+	font-weight: 700;
+}
+.chart-value {
+	text-align: right;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.timeline {
+	position: fixed;
+	left: 50%;
+	bottom: 12px;
+	transform: translateX(-50%);
+	width: min(720px, calc(100vw - 24px));
+	padding: 10px 14px;
+}
+.timeline input {
+	width: 100%;
+}
+.timeline-sample {
+	margin: 6px 0 0;
+	max-height: 4.5em;
+	overflow: auto;
+	font:
+		12px / 1.5 ui-monospace,
+		SFMono-Regular,
+		Menlo,
+		monospace;
+	white-space: pre-wrap;
+	color: var(--text);
+}
+#timelineLabel {
+	font-size: 12px;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+.error {
+	color: #ff6b6b;
+	font-size: 12px;
+}
+
+.settings {
+	position: fixed;
+	top: 64px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 300px;
+	padding: 12px;
+	z-index: 4;
+}
+.setting {
+	display: block;
+	margin-bottom: 10px;
+	font-size: 13px;
+}
+.setting-head {
+	display: flex;
+	justify-content: space-between;
+}
+.setting input {
+	width: 100%;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: targets settings hints, not the #samples caption */
+.setting .muted {
+	font-size: 11px;
+}
+.setting-toggle input {
+	width: auto;
+	margin: 0;
+}
+
+.neuron {
+	position: fixed;
+	right: 12px;
+	bottom: 100px;
+	width: 330px;
+	max-height: 50vh;
+	overflow: auto;
+	padding: 12px;
+	font-size: 12px;
+}
+.neuron-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+.neuron h3 {
+	font-size: 14px;
+	margin: 0;
+}
+.neuron h4 {
+	margin: 10px 0 2px;
+	font-size: 12px;
+	color: var(--muted);
+	font-weight: 600;
+}
+.neuron table {
+	width: 100%;
+	border-collapse: collapse;
+	font-variant-numeric: tabular-nums;
+}
+.neuron th,
+.neuron td {
+	text-align: right;
+	padding: 2px 4px;
+}
+.neuron th:first-child,
+.neuron td:first-child {
+	text-align: left;
+}
+.neuron th {
+	color: var(--muted);
+	font-weight: 500;
+}
+.pos {
+	color: var(--warm);
+}
+.neg {
+	color: var(--cool);
+}
+.kernel-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
+}
+.kernel-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+}
+.kernel {
+	width: 42px;
+	height: 42px;
+	image-rendering: pixelated;
+	border-radius: 3px;
+}
+
+.hidden {
+	/* biome-ignore lint/complexity/noImportantStyles: utility class that must win over every panel's display */
+	display: none !important;
+}
+.banner {
+	position: fixed;
+	top: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: #3b1d1d;
+	border: 1px solid #ff6b6b;
+	padding: 8px 12px;
+	border-radius: 8px;
+	z-index: 5;
+	font-size: 13px;
+}
+.fatal {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	white-space: pre-line;
+	text-align: center;
+	font-size: 16px;
+	line-height: 1.6;
+	z-index: 10;
+	background: var(--bg);
+	padding: 24px;
+}
+
+@media (max-width: 760px) {
+	.left,
+	.right {
+		width: calc(50vw - 18px);
+	}
+	.topbar {
+		top: auto;
+		bottom: 100px;
+	}
+	.neuron {
+		left: 12px;
+		width: auto;
+	}
+}
+
+.prompt {
+	width: 100%;
+	resize: vertical;
+	background: #05070c;
+	color: var(--text);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 8px;
+	font:
+		13px / 1.45 ui-monospace,
+		SFMono-Regular,
+		Menlo,
+		monospace;
+}
+#textPanel {
+	width: 300px;
+	max-height: calc(100vh - 130px);
+	overflow: auto;
+}
+#textPanel .setting {
+	margin-top: 10px;
+}
+#textPanel select {
+	width: 100%;
+}
+.player-bar {
+	display: flex;
+	gap: 6px;
+	margin-top: 10px;
+}
+.player-bar button {
+	flex: 1;
+	padding: 6px 4px;
+}
+button.primary {
+	background: var(--cool);
+	border-color: var(--cool);
+	color: #fff;
+	font-weight: 600;
+}
+.step-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 8px;
+}
+.step-pills button {
+	padding: 2px 7px;
+	font-size: 11px;
+	border-radius: 12px;
+	color: var(--muted);
+}
+.step-pills button.done {
+	color: var(--text);
+}
+.step-pills button.on {
+	color: var(--warm);
+	border-color: var(--warm);
+	font-weight: 700;
+}
+.caption {
+	position: fixed;
+	right: 12px;
+	top: 300px;
+	width: 380px;
+	padding: 12px 14px;
+	font-size: 14px;
+	line-height: 1.5;
+	border-left: 3px solid var(--warm);
+}
+.caption b {
+	color: var(--warm);
+}

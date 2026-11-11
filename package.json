@@ -1,0 +1,36 @@
+{
+	"name": "nn-for-kids",
+	"version": "0.1.0",
+	"private": true,
+	"license": "MIT",
+	"type": "module",
+	"description": "Train a small neural network in pure TypeScript and watch it think in 3D.",
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"train": "tsx src/trainer/train.ts",
+		"dev": "vite",
+		"build": "vite build",
+		"build:standalone": "tsx scripts/build-standalone.ts",
+		"preview": "vite preview",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"format": "biome check --write ."
+	},
+	"dependencies": {
+		"three": "^0.186.1",
+		"yauzl": "^3.4.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.15",
+		"@types/node": "^26.6.5",
+		"@types/three": "^0.186.0",
+		"@types/yauzl": "^3.4.0",
+		"tsx": "^4.23.15",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.4",
+		"vitest": "^5.0.4"
+	}
+}

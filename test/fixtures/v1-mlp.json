@@ -1,0 +1,25 @@
+{
+	"sizes": [6, 5, 4, 3],
+	"snapshot": {
+		"layers": [
+			{
+				"W": "7jjzN5GxmzpHuq+2yDo4r9W1IDjFtBcvFrQOPA+85DhhrpM7DbRrsNg4QjXVtFYyUre8tas0ybEeuDY4",
+				"b": "ZqoAAGYqZi7NMA=="
+			},
+			{
+				"W": "KTSdNtC1GqP/LMG2SzCLrdCzebItNQ69rLTDsLw0g7AFOc81ULusMQ==",
+				"b": "Zq4AAGYuZjI="
+			},
+			{
+				"W": "SDtSOew52TuNNxw40DrVNHc7Fzroth88",
+				"b": "zbAAAM0w"
+			}
+		]
+	},
+	"input": [0, 0.2, 0.9, 1, 0.5, 0.1],
+	"act": [
+		[0.2843994200229645, 0.027044685557484627, 0, 0.814697265625, 0],
+		[0, 0, 0.036569323390722275, 0],
+		[0.28902581334114075, 0.33717823028564453, 0.3737959861755371]
+	]
+}
