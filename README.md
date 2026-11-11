@@ -3,6 +3,8 @@
 Train a small neural network in **pure TypeScript** (no Python, no ML libraries) and watch it
 classify your drawings in 3D.
 
+**Live demo:** [try it in your browser](https://purchart.eu/list?file=2026-10-26--09-42-52---vasek---neural-network-llm.html), no install needed.
+
 **How it works, explained step by step:** [read the guide](https://purchart.eu/list?file=2026-11-11--06-53-52---vasek---nn-how-it-works.html)
 (source in [`docs/how-it-works.html`](docs/how-it-works.html)).
 
